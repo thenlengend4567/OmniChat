@@ -1,0 +1,21 @@
+{
+  "name": "omnichat-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/desktop",
+    "packages/backend",
+    "packages/realtime"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:desktop": "npm run dev --workspace=apps/desktop",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:desktop": "npm run build --workspace=apps/desktop",
+    "lint:all": "npm run lint --workspaces",
+    "test:all": "npm run test --workspaces",
+    "security-audit": "node scripts/security-scan.js",
+    "audit:security": "node scripts/security-scan.js"
+  }
+}

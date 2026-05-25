@@ -1,0 +1,90 @@
+name: Vercel Website Deployments
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'package.json'
+      - '.github/workflows/vercel-deploy.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'package.json'
+      - '.github/workflows/vercel-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and Deploy to Vercel
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Pull Vercel Environment Configuration
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" = "push" ]; then
+            echo "Pulling production environment configuration..."
+            npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            echo "Pulling preview environment configuration..."
+            npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build Project Artifacts
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" = "push" ]; then
+            echo "Building for production..."
+            npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            echo "Building for preview..."
+            npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy Project Artifacts to Vercel
+        id: vercel-deploy
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" = "push" ]; then
+            echo "Deploying to production..."
+            DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | grep -o 'https://[^ ]*')
+          else
+            echo "Deploying preview instance..."
+            DEPLOY_URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} | grep -o 'https://[^ ]*')
+          fi
+          echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_ENV
+          echo "Deployment successful: $DEPLOY_URL"
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Display Deployment Details
+        run: |
+          echo "============================================================"
+          echo "  Deploy Environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Preview' }}"
+          echo "  Deploy URL:         ${{ env.DEPLOY_URL }}"
+          echo "============================================================"

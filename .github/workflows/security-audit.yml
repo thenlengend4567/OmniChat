@@ -1,0 +1,34 @@
+name: Codebase Security Audit Scanner
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Run every Sunday at midnight UTC to perform weekly scanning against dependencies and code changes
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    name: Code Static Analysis & Credentials Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Run OmniChat Security Scanner
+        run: node scripts/security-scan.js

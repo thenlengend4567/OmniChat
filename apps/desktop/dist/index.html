@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniChat Desktop</title>
+  <!-- Google Fonts: Outfit and Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-surface: rgba(17, 24, 39, 0.7);
+      --bg-surface-hover: rgba(31, 41, 55, 0.8);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-color-glow: rgba(59, 130, 246, 0.3);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --color-primary: #3b82f6;
+      --color-primary-glow: rgba(59, 130, 246, 0.5);
+      --color-accent: #10b981;
+      --color-accent-glow: rgba(16, 185, 129, 0.4);
+      --color-danger: #ef4444;
+      --titlebar-height: 48px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: transparent;
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Window Container with Glassmorphism and Neon Border Glow */
+    .app-container {
+      flex: 1;
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                  0 0 40px rgba(59, 130, 246, 0.15);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .app-container:hover {
+      border-color: var(--border-color-glow);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6),
+                  0 0 50px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Custom Titlebar */
+    .titlebar {
+      height: var(--titlebar-height);
+      background: rgba(15, 23, 42, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      cursor: default;
+    }
+
+    /* Drag region to move window */
+    .drag-region {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 150px; /* Leave space for controls */
+      height: var(--titlebar-height);
+    }
+
+    .titlebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .brand-logo {
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      border-radius: 6px;
+      box-shadow: 0 0 10px var(--color-primary-glow);
+    }
+
+    .brand-text {
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Custom Window Controls */
+    .titlebar-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .control-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .control-btn.close:hover {
+      background: var(--color-danger);
+      color: white;
+    }
+
+    .control-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .welcome-card {
+      max-width: 500px;
+      padding: 32px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .welcome-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 30%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-desc {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* Glowing Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 6px 12px;
+      border-radius: 20px;
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--color-accent-glow);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    /* Actions Grid */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    .action-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .action-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--color-primary-glow);
+      transform: translateY(-2px);
+    }
+
+    .action-icon {
+      color: var(--color-primary);
+      margin-bottom: 8px;
+    }
+
+    .action-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .action-text {
+      color: var(--text-secondary);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    /* Footer Info */
+    .footer-info {
+      margin-top: 30px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-link {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Titlebar -->
+    <header class="titlebar">
+      <!-- Drag Handle -->
+      <div class="drag-region" data-tauri-drag-region></div>
+
+      <div class="titlebar-brand">
+        <div class="brand-logo"></div>
+        <span class="brand-text">OmniChat</span>
+      </div>
+
+      <div class="titlebar-controls">
+        <!-- Minimize -->
+        <button class="control-btn" id="btn-minimize" title="Minimize">
+          <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+        </button>
+        <!-- Maximize -->
+        <button class="control-btn" id="btn-maximize" title="Maximize">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+        </button>
+        <!-- Close -->
+        <button class="control-btn close" id="btn-close" title="Close">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="welcome-card">
+        
+        <div class="badge">
+          <div class="badge-dot"></div>
+          <span>Native Rust Swarm Active</span>
+        </div>
+
+        <h1 class="welcome-title">OmniChat Desktop</h1>
+        <p class="welcome-desc">
+          State-of-the-art desktop client. Equipped with a custom borderless window chrome and a native system tray controller.
+        </p>
+
+        <!-- Actions -->
+        <div class="actions-grid">
+          <div class="action-card" id="card-tray-info">
+            <div class="action-icon">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <div class="action-title">System Tray Active</div>
+            <div class="action-text">Right click the tray icon to Open or Quit the app gracefully.</div>
+          </div>
+          <div class="action-card" id="card-maximize-toggle">
+            <div class="action-icon">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M4 11h5V6H4v5zm0 7h5v-5H4v5zm7 0h9v-5h-9v5zm0-7h9V6h-9v5z"/></svg>
+            </div>
+            <div class="action-title">Responsive Design</div>
+            <div class="action-text">Smooth window resizing and high performance hardware acceleration.</div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-info">
+          <span>Engineered by OmniChat swag group &bull; v2.1.0</span>
+          <span>Window state control handled securely via native IPC Rust handles</span>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // Safe reference to Tauri core invoke
+    const invoke = window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+
+    if (invoke) {
+      console.log("Tauri v2 API found. Registering handlers...");
+
+      // Register minimize window
+      document.getElementById('btn-minimize').addEventListener('click', () => {
+        invoke('minimize_window').catch(err => console.error("Error minimizing:", err));
+      });
+
+      // Register maximize window
+      document.getElementById('btn-maximize').addEventListener('click', () => {
+        invoke('toggle_maximize_window').catch(err => console.error("Error toggling maximize:", err));
+      });
+
+      // Register close window
+      document.getElementById('btn-close').addEventListener('click', () => {
+        invoke('close_window').catch(err => console.error("Error closing:", err));
+      });
+
+      // Register action card click to toggle maximize just for fun and interactivity
+      document.getElementById('card-maximize-toggle').addEventListener('click', () => {
+        invoke('toggle_maximize_window').catch(err => console.error("Error toggling maximize:", err));
+      });
+
+    } else {
+      console.warn("Tauri API not detected. Make sure you are running inside a Tauri window context.");
+      
+      // Fallbacks for web browser testing
+      document.getElementById('btn-minimize').addEventListener('click', () => {
+        alert("Minimize action triggered (Mock)");
+      });
+
+      document.getElementById('btn-maximize').addEventListener('click', () => {
+        alert("Maximize action triggered (Mock)");
+      });
+
+      document.getElementById('btn-close').addEventListener('click', () => {
+        alert("Close action triggered (Mock)");
+      });
+    }
+  </script>
+</body>
+</html>

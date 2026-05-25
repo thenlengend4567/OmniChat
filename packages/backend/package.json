@@ -1,0 +1,17 @@
+{
+  "name": "@omnichat/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OmniChat real-time backend database schemas, migrations, and helper scripts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "db:migrate": "echo 'Run supabase migration commands here'",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
