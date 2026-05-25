@@ -12,6 +12,9 @@ on:
     - cron: '0 0 * * 0'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   security-scan:
     name: Code Static Analysis & Credentials Scan
@@ -24,11 +27,10 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Install Project Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run OmniChat Security Scanner
         run: node scripts/security-scan.js

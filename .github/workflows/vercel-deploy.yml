@@ -19,6 +19,9 @@ on:
       - '.github/workflows/vercel-deploy.yml'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     name: Build and Deploy to Vercel
@@ -31,11 +34,10 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Install Project Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Pull Vercel Environment Configuration
         run: |

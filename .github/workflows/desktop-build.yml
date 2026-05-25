@@ -19,6 +19,9 @@ on:
       - '.github/workflows/desktop-build.yml'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-windows:
     name: Compile and Bundle Windows Installer
@@ -31,8 +34,7 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -45,21 +47,17 @@ jobs:
           workspaces: apps/desktop/src-tauri -> target
 
       - name: Install Project Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Compile Tauri Application
         shell: pwsh
         run: |
-          # Build frontend workspace assets and then compile the Tauri application
-          # Ensures that build runs either standard custom script or tauri cli directly
           Write-Host "Starting production desktop compilation..."
           
-          # Check if desktop has src-tauri, if so compile, otherwise output compile-ready warnings
           if (Test-Path "apps/desktop/src-tauri") {
             npm run build:desktop
           } else {
             Write-Host "Desktop folder is currently initialized but empty. Running dummy build for pipeline validation."
-            # Make a placeholder file to prevent build failures during workspace verification
             New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/target/release/bundle/nsis"
             New-Item -ItemType File -Force -Path "apps/desktop/src-tauri/target/release/bundle/nsis/omnichat-setup-placeholder.exe" -Value "OmniChat-Setup Dummy Installer Executable Contents"
           }
@@ -69,7 +67,6 @@ jobs:
         run: |
           Write-Host "Locating the production installer..."
           
-          # Recursively search for any compiled .exe bundle under the target/release directory
           $bundlePath = "apps/desktop/src-tauri"
           if (Test-Path $bundlePath) {
             $installer = Get-ChildItem -Path $bundlePath -Filter "*.exe" -Recurse | Where-Object { $_.FullName -like "*bundle*" } | Select-Object -First 1

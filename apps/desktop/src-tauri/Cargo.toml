@@ -6,10 +6,10 @@ authors = ["OmniChat Swarm"]
 edition = "2021"
 
 [build-dependencies]
-tauri-build = { version = "2.0.3" }
+tauri-build = { version = "2.0.3", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.3" }
+tauri = { version = "2.0.3", features = [] }
 tauri-plugin-notification = "2.0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
