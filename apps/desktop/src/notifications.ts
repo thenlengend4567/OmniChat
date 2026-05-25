@@ -22,15 +22,10 @@ let notificationApi: any = null;
 const initTauriNotification = async () => {
   if (notificationApi) return notificationApi;
   try {
-    // Try Tauri v2 plugin first
+    // Tauri v2 plugin
     notificationApi = await import('@tauri-apps/plugin-notification');
   } catch {
-    try {
-      // Fallback to Tauri v1 API
-      notificationApi = await import('@tauri-apps/api/notification');
-    } catch {
-      console.warn('[Notification] Tauri notification APIs not found. Will use web fallback.');
-    }
+    console.warn('[Notification] Tauri notification plugin not found. Will use web fallback.');
   }
   return notificationApi;
 };
